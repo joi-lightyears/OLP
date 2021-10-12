@@ -30,6 +30,7 @@ int max(int a, int b);
 int min(int a, int b);
 int highTree(NODE *T);
 int minHighTree(NODE *T);
+NODE *searchNode(NODE *T, int x);
 
 int main()
 {
@@ -49,6 +50,14 @@ int main()
     cout<<"\nLeaf node: "<<countLeaf(T);
     cout<<"\nDo sau lon nhat cua cay (chieu cao): "<<highTree(T);
     cout<<"\nDo sau nho nhat cua cay: "<<minHighTree(T);
+    int x;
+    cout<<"\nNhap phan tu can tim kiem: ";
+    cin>>x;
+    NODE *pSearch = searchNode(T, x);
+    if (pSearch == NULL)
+        cout<<"Khong ton tai";
+    else
+        cout<<"Co ton tai";
     return 0;
 }
 void constructTree(NODE* &T)
@@ -145,7 +154,17 @@ int minHighTree(NODE *T)
 {
     if (T == NULL)
      return 0;
-    int left = highTree(T->pLeft);
-    int right = highTree(T->pRight);
+    int left = minHighTree(T->pLeft);
+    int right = minHighTree(T->pRight);
     return min(left, right) + 1;
+}
+NODE *searchNode(NODE *T, int x)
+{
+    if (T == NULL)
+        return NULL;
+    else if (x>T->data)
+        return searchNode(T->pRight, x);
+    else if (x<T->data)
+        return searchNode(T->pLeft, x);
+    return T;
 }
