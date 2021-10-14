@@ -1,4 +1,14 @@
+/*
+Ket qua cay AVL duoc tao theo de bai
 
+         30
+       /   \
+     10     50
+    / \    / \
+  -1  20  35 57
+  /\  /     / \
+-5 7 15   55  65
+*/
 #include <iostream>
 using namespace std;
 struct NODE
