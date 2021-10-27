@@ -1,15 +1,6 @@
-/*
-Ket qua cay AVL duoc tao theo de bai
 
-         30
-       /   \
-     10     50
-    / \    / \
-  -1  20  35 57
-  /\  /     / \
--5 7 15   55  65
-*/
 #include <iostream>
+#include <fstream>
 using namespace std;
 struct NODE
 {
@@ -21,9 +12,15 @@ struct NODE
 void constructTree(NODE *&T);
 NODE *constructNode(int x);
 NODE *addNode(NODE *T, NODE *newNode);
-void input(NODE *&T);
+void input(NODE *&T, int x);
 void travelNLR(NODE *T);
-NODE *searchNode(NODE *T, int x);
+NODE *searchNode(NODE *T, int x, int &count);
+int countLeaf(NODE *T);
+int countNODE1(NODE *T);
+int countNODE2(NODE *T);
+int sumNLR(NODE *T);
+void printAllLevel(NODE *T);
+void printCurrentLevel(NODE *T, int level);
 
 int max(int a, int b);
 int highTree(NODE *T);
@@ -36,20 +33,40 @@ int main()
 {
     NODE *T;
     constructTree(T);
-    cout << "THU TU NHAP THEO DE BAI:  50 20 30 10 -5 7 15 35 57 65 55 -1\n";
-    for (int i = 1; i <= 12; i++)
-    {
-        input(T);
-    }
-    travelNLR(T);
-    int x;
-    cout<<"\nNhap phan tu can tim kiem: ";
-    cin>>x;
-    NODE *pSearch = searchNode(T, x);
-    if (pSearch == NULL)
-        cout<<"Khong ton tai";
+    fstream file;
+    file.open("input.txt", ios::in);
+    if (!file)
+        cout<<"KHONG CO FILE";
     else
-        cout<<"Co ton tai";
+    {
+        int x;
+        file>>x;
+        while (!file.eof())
+        {
+            input(T, x);
+            file>>x;
+        }
+    }
+    cout << "THU TU NHAP THEO DE BAI:  1  3  5  7  9  12  15  17  21  23  25  27\n";
+    travelNLR(T);
+    int x, count = 0;
+    cout << "\nNhap phan tu can tim kiem: ";
+    cin >> x;
+    NODE *pSearch = searchNode(T, x, count);
+    if (pSearch == NULL)
+        cout << "Khong ton tai";
+    else
+    {
+        cout << "Co ton tai";
+        cout << "\nSo phep so sanh la: " << count;
+    }
+    cout << "\nSo node leaf: " << countLeaf(T);
+    cout << "\nChieu cao cua cay: " << highTree(T);
+    cout << "\nSo node bac 1: " << countNODE1(T);
+    cout << "\nSo node bac 2: " << countNODE2(T);
+    cout<<"\nTong cac phan tu: "<<sumNLR(T);
+    cout<<"\n In theo level: ";
+    printAllLevel(T);
     return 0;
 }
 // Khoi tao node goc cua tree
@@ -96,13 +113,16 @@ NODE *addNode(NODE *T, NODE *newNode)
     if (bal < -1 && newNode->data < T->pLeft->data)
     {
         rotate_LL(T);
-    }else if (bal < -1 && newNode->data > T->pLeft->data) // Left right
+    }
+    else if (bal < -1 && newNode->data > T->pLeft->data) // Left right
     {
         rotate_LR(T);
-    }else if (bal > 1 && newNode->data > T->pRight->data) // Right right
+    }
+    else if (bal > 1 && newNode->data > T->pRight->data) // Right right
     {
         rotate_RR(T);
-    }else if (bal > 1 && newNode->data < T->pRight->data) // Right left
+    }
+    else if (bal > 1 && newNode->data < T->pRight->data) // Right left
     {
         rotate_RL(T);
     }
@@ -111,11 +131,8 @@ NODE *addNode(NODE *T, NODE *newNode)
     // T se tra ve T->pLeft hoac T->pRight o ham addNode() khi chua phai la lan de quy cuoi (tuc la no se tra ve node goc cua cay con)
     return T;
 }
-void input(NODE *&T)
+void input(NODE *&T, int x)
 {
-    int x;
-    cout << "HAY NHAP 1 SO NGUYEN: ";
-    cin >> x;
     NODE *newNode = constructNode(x);
     T = addNode(T, newNode);
 }
@@ -195,14 +212,77 @@ void rotate_RL(NODE *&T)
     T2->pRight = T1;
     rotate_RR(T);
 }
-NODE *searchNode(NODE *T, int x)
+NODE *searchNode(NODE *T, int x, int &count)
 {
     if (T == NULL)
+    {
+        count++;
         return NULL;
-    else if (x>T->data)
-        return searchNode(T->pRight, x);
-    else if (x<T->data)
-        return searchNode(T->pLeft, x);
+    }
+    else if (x > T->data)
+    {
+        count++;
+        return searchNode(T->pRight, x, count);
+    }
+    else if (x < T->data)
+    {
+        count++;
+        return searchNode(T->pLeft, x, count);
+    }
+    count++;
     return T;
+}
+int countLeaf(NODE *T)
+{
+    if (T == NULL)
+        return 0;
+    else if (T->pLeft == NULL && T->pRight == NULL)
+        return 1;
+    else
+        return countLeaf(T->pLeft) + countLeaf(T->pRight);
+}
+int countNODE1(NODE *T)
+{
+    int count = 0;
+    if (T == NULL)
+        return 0;
+    else if ((T->pLeft == NULL && T->pRight != NULL) || (T->pLeft != NULL && T->pRight == NULL))
+        count = 1;
+    return count + countNODE1(T->pLeft) + countNODE1(T->pRight);
+}
+int countNODE2(NODE *T)
+{
+    int count = 0;
+    if (T == NULL)
+        return 0;
+    else if (T->pLeft != NULL && T->pRight != NULL)
+        count = 1;
+    return count + countNODE2(T->pLeft) + countNODE2(T->pRight);
+}
+int sumNLR(NODE *T)
+{
+    int sum=0;
+    if (T==NULL)
+        return 0;
+    else
+        sum=T->data;
+    return sum + sumNLR(T->pLeft) + sumNLR(T->pRight);
+}
+void printAllLevel(NODE *T)
+{
+    int h = highTree(T);
+    for (int i = 1; i <= h; i++)
+        printCurrentLevel(T, i);
+}
+void printCurrentLevel(NODE *T, int level)
+{
+    if (T == NULL)
+        return;
+    if (level == 1)
+        cout << T->data << " ";
+    else if (level > 1) {
+        printCurrentLevel(T->pLeft, level - 1);
+        printCurrentLevel(T->pRight, level - 1);
+    }
 }
 // copyrighted by 20H1120201_NguyenThanhDat

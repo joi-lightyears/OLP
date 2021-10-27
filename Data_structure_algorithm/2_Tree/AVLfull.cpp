@@ -1,13 +1,42 @@
 /*
 Ket qua cay AVL duoc tao theo de bai
+            17
+         /      \
+      7           23
+    /   \        / \
+  3      12    21   25
+ /\     / \           \
+1  5   9  15           27
+a. Tạo cây AVL từ dãy A. Cho biết số phép so sánh cần thực hiện để tìm phần tử 21 trên cây AVL vừa tạo.
+>> Lý thuyết: số phép ss cần thực hiện là 3  (ss với 17, với 23, với 21)
+>> Kiểm chứng qua chạy chương trình: số lần ss là 3 (thuật toán dùng ở đây chỉ sử dụng 2 phép so sánh if
+nếu phần tử đó tồn tại, vì trường hợp == ta trả về luôn node đó, nhưng ở đây ngầm hiểu nó có so sánh == nếu ta
+chạy ct)
 
-         30
-       /   \
-     10     50
-    / \    / \
-  -1  20  35 57
-  /\  /     / \
--5 7 15   55  65
+b. Chương trình cho câu b đã tạo ở file BST.cpp, kết quả cho ta thấy số lần so sánh để tìm ra node có key là 21
+là 9.
+
+c. Sở dĩ cây BST có phép ss nhiều hơn là vì ở cây BST node đầu tiên có key là 1 và các node sau theo thứ tự luôn có key lớn hơn
+key của node trước nên thành ra nó tạo ra một danh sách không khác gì mấy linked list nên khi duyệt thì nó duyệt tuần
+tự như ở linked list, trường hợp này nó chỉ dùng duy nhất một phép so sánh nên không mang lại hiệu quả như ở cây AVL
+
+d. Đếm số node lá trên cây
+Lý thuyết: có 6 node leaf
+Kiểm chứng hàm đếm node leaf khi chạy ct: 6
+
+f. Chiều cao của cây
+Lý thuyết: 4
+Kiểm chứng ct: 4
+
+g. Đếm số node có bậc 1,2
+Lý thuyết: Bậc 1: 1 | Bậc 2: 5
+Kiểm chứng ct: Bậc 1: 1 | Bậc 2: 5
+
+h. Tính tổng các phần tử
+Lý thuyết: 165
+Kiểm chứng ct: 165
+
+
 */
 #include <iostream>
 using namespace std;
@@ -23,7 +52,13 @@ NODE *constructNode(int x);
 NODE *addNode(NODE *T, NODE *newNode);
 void input(NODE *&T);
 void travelNLR(NODE *T);
-NODE *searchNode(NODE *T, int x);
+NODE *searchNode(NODE *T, int x, int &count);
+int countLeaf(NODE *T);
+int countNODE1(NODE *T);
+int countNODE2(NODE *T);
+int sumNLR(NODE *T);
+void printAllLevel(NODE *T);
+void printCurrentLevel(NODE *T, int level);
 
 int max(int a, int b);
 int highTree(NODE *T);
@@ -36,20 +71,30 @@ int main()
 {
     NODE *T;
     constructTree(T);
-    cout << "THU TU NHAP THEO DE BAI:  50 20 30 10 -5 7 15 35 57 65 55 -1\n";
+    cout << "THU TU NHAP THEO DE BAI:  1  3  5  7  9  12  15  17  21  23  25  27\n";
     for (int i = 1; i <= 12; i++)
     {
         input(T);
     }
     travelNLR(T);
-    int x;
-    cout<<"\nNhap phan tu can tim kiem: ";
-    cin>>x;
-    NODE *pSearch = searchNode(T, x);
+    int x, count = 0;
+    cout << "\nNhap phan tu can tim kiem: ";
+    cin >> x;
+    NODE *pSearch = searchNode(T, x, count);
     if (pSearch == NULL)
-        cout<<"Khong ton tai";
+        cout << "Khong ton tai";
     else
-        cout<<"Co ton tai";
+    {
+        cout << "Co ton tai";
+        cout << "\nSo phep so sanh la: " << count;
+    }
+    cout << "\nSo node leaf: " << countLeaf(T);
+    cout << "\nChieu cao cua cay: " << highTree(T);
+    cout << "\nSo node bac 1: " << countNODE1(T);
+    cout << "\nSo node bac 2: " << countNODE2(T);
+    cout<<"\nTong cac phan tu: "<<sumNLR(T);
+    cout<<"\n In theo level: ";
+    printAllLevel(T);
     return 0;
 }
 // Khoi tao node goc cua tree
@@ -96,13 +141,16 @@ NODE *addNode(NODE *T, NODE *newNode)
     if (bal < -1 && newNode->data < T->pLeft->data)
     {
         rotate_LL(T);
-    }else if (bal < -1 && newNode->data > T->pLeft->data) // Left right
+    }
+    else if (bal < -1 && newNode->data > T->pLeft->data) // Left right
     {
         rotate_LR(T);
-    }else if (bal > 1 && newNode->data > T->pRight->data) // Right right
+    }
+    else if (bal > 1 && newNode->data > T->pRight->data) // Right right
     {
         rotate_RR(T);
-    }else if (bal > 1 && newNode->data < T->pRight->data) // Right left
+    }
+    else if (bal > 1 && newNode->data < T->pRight->data) // Right left
     {
         rotate_RL(T);
     }
@@ -195,14 +243,77 @@ void rotate_RL(NODE *&T)
     T2->pRight = T1;
     rotate_RR(T);
 }
-NODE *searchNode(NODE *T, int x)
+NODE *searchNode(NODE *T, int x, int &count)
 {
     if (T == NULL)
+    {
+        count++;
         return NULL;
-    else if (x>T->data)
-        return searchNode(T->pRight, x);
-    else if (x<T->data)
-        return searchNode(T->pLeft, x);
+    }
+    else if (x > T->data)
+    {
+        count++;
+        return searchNode(T->pRight, x, count);
+    }
+    else if (x < T->data)
+    {
+        count++;
+        return searchNode(T->pLeft, x, count);
+    }
+    count++;
     return T;
+}
+int countLeaf(NODE *T)
+{
+    if (T == NULL)
+        return 0;
+    else if (T->pLeft == NULL && T->pRight == NULL)
+        return 1;
+    else
+        return countLeaf(T->pLeft) + countLeaf(T->pRight);
+}
+int countNODE1(NODE *T)
+{
+    int count = 0;
+    if (T == NULL)
+        return 0;
+    else if ((T->pLeft == NULL && T->pRight != NULL) || (T->pLeft != NULL && T->pRight == NULL))
+        count = 1;
+    return count + countNODE1(T->pLeft) + countNODE1(T->pRight);
+}
+int countNODE2(NODE *T)
+{
+    int count = 0;
+    if (T == NULL)
+        return 0;
+    else if (T->pLeft != NULL && T->pRight != NULL)
+        count = 1;
+    return count + countNODE2(T->pLeft) + countNODE2(T->pRight);
+}
+int sumNLR(NODE *T)
+{
+    int sum=0;
+    if (T==NULL)
+        return 0;
+    else
+        sum=T->data;
+    return sum + sumNLR(T->pLeft) + sumNLR(T->pRight);
+}
+void printAllLevel(NODE *T)
+{
+    int h = highTree(T);
+    for (int i = 1; i <= h; i++)
+        printCurrentLevel(T, i);
+}
+void printCurrentLevel(NODE *T, int level)
+{
+    if (T == NULL)
+        return;
+    if (level == 1)
+        cout << T->data << " ";
+    else if (level > 1) {
+        printCurrentLevel(T->pLeft, level - 1);
+        printCurrentLevel(T->pRight, level - 1);
+    }
 }
 // copyrighted by 20H1120201_NguyenThanhDat

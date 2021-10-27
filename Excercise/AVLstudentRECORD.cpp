@@ -1,29 +1,22 @@
-/*
-Ket qua cay AVL duoc tao theo de bai
 
-         30
-       /   \
-     10     50
-    / \    / \
-  -1  20  35 57
-  /\  /     / \
--5 7 15   55  65
-*/
 #include <iostream>
+#include<string>
+#include<iomanip> //setw()
 using namespace std;
 struct NODE
 {
-    int data;
+    string mssv, name, birth;
+    float gpa;
     NODE *pLeft;
     NODE *pRight;
 };
-
+void menu(NODE *&T);
+void actions(int menuOpt, NODE *&T);
 void constructTree(NODE *&T);
 NODE *constructNode(int x);
 NODE *addNode(NODE *T, NODE *newNode);
 void input(NODE *&T);
 void travelNLR(NODE *T);
-NODE *searchNode(NODE *T, int x);
 
 int max(int a, int b);
 int highTree(NODE *T);
@@ -36,21 +29,45 @@ int main()
 {
     NODE *T;
     constructTree(T);
-    cout << "THU TU NHAP THEO DE BAI:  50 20 30 10 -5 7 15 35 57 65 55 -1\n";
-    for (int i = 1; i <= 12; i++)
-    {
-        input(T);
-    }
-    travelNLR(T);
-    int x;
-    cout<<"\nNhap phan tu can tim kiem: ";
-    cin>>x;
-    NODE *pSearch = searchNode(T, x);
-    if (pSearch == NULL)
-        cout<<"Khong ton tai";
-    else
-        cout<<"Co ton tai";
+    menu(T);
+    
     return 0;
+}
+void menu(NODE *&T)
+{
+    cout<<"/////////////////////////////////////////////\n";
+    cout<<"                   MENU                      \n";
+    cout<<"            1. THEM SINH VIEN                \n";
+    cout<<"            2. HIEN THI DANH SACH            \n";
+    cout<<"/////////////////////////////////////////////\n";
+    int menuOpt;
+    cout<<"CHON NHIEM VU (1, 2,...): ";
+    cin>>menuOpt;
+    cin.ignore();
+    actions(menuOpt, T);
+}
+void actions(int menuOpt, NODE *&T)
+{
+    switch(menuOpt)
+    {
+        case 1:
+        {
+            input(T);
+            menu(T);
+            break;
+        }
+        case 2:
+        {
+            cout<<"DANH SACH\n\n";
+            cout<<setw(15)<<left<<"MSSV";
+            cout<<setw(30)<<left<<"HO VA TEN";
+            cout<<setw(20)<<left<<"DATE OF BIRTH";
+            cout<<setw(10)<<left<<"GPA"<<endl;
+            travelNLR(T);
+            system("pause");
+            menu(T);
+        }
+    }
 }
 // Khoi tao node goc cua tree
 void constructTree(NODE *&T)
@@ -58,10 +75,18 @@ void constructTree(NODE *&T)
     T = NULL;
 }
 // Tao mot node chua du lieu vua nhap vao
-NODE *constructNode(int x)
+NODE *constructNode()
 {
     NODE *newNode = new NODE;
-    newNode->data = x;
+    cout<<"NHAP MA SO SINH VIEN: ";
+    cin>>newNode->mssv;
+    cout<<"NHAP HO VA TEN SINH VIEN: ";
+    cin.ignore();
+    getline(cin, newNode->name);
+    cout<<"NHAP NGAY THANG NAM SINH (dd/mm/yy): ";
+    getline(cin, newNode->birth);
+    cout<<"NHAP DIEM GPA: ";
+    cin>>newNode->gpa;
     newNode->pLeft = NULL;
     newNode->pRight = NULL;
     return newNode;
@@ -75,55 +100,56 @@ NODE *addNode(NODE *T, NODE *newNode)
     }
     else // neu tai node T da co data thi xet qua 2 ben left right cua node T do
     {
-        if (newNode->data < T->data)
+        if (newNode->gpa < T->gpa)
         {
             T->pLeft = addNode(T->pLeft, newNode);
         }
-        else if (newNode->data > T->data) // khong co truong hop bang nhau trong binary tree
+        else if (newNode->gpa > T->gpa) // khong co truong hop bang nhau trong binary tree
         {
             T->pRight = addNode(T->pRight, newNode);
         }
     }
-    // sau khi co duoc 2 node left right phia tren
-    // ta tinh balance bang cach tinh do cao max cua moi node do bang hamf highTree()
-    // sau do lay do cao max ben node phai tru di do cao max ben node trai
-    // o day co 1 nhuoc diem la moi lan de quy se phai tinh chieu cao
-    // cua cay o lan de quy do, ma tinh lai chieu cao thi phai de quy ham highTree() nhieu lan
-    // nhu vay de ct nhanh hon thi nen luu tri so balance hoac tri so height chieu cao cua moi goc (T)
-    // o day nen su dung height vi no de hinh dung va code hon la luu tri so balance
     int bal = highTree(T->pRight) - highTree(T->pLeft); // bal = -1 left | 0 balance | 1 right
     // Left left
-    if (bal < -1 && newNode->data < T->pLeft->data)
+    if (bal < -1 && newNode->gpa < T->pLeft->gpa)
     {
         rotate_LL(T);
-    }else if (bal < -1 && newNode->data > T->pLeft->data) // Left right
+    }
+    else if (bal < -1 && newNode->gpa > T->pLeft->gpa) // Left right
     {
         rotate_LR(T);
-    }else if (bal > 1 && newNode->data > T->pRight->data) // Right right
+    }
+    else if (bal > 1 && newNode->gpa > T->pRight->gpa) // Right right
     {
         rotate_RR(T);
-    }else if (bal > 1 && newNode->data < T->pRight->data) // Right left
+    }
+    else if (bal > 1 && newNode->gpa < T->pRight->gpa) // Right left
     {
         rotate_RL(T);
     }
-    // sau khi xay ra rotate hoac khong xay ra rotate thi ta tra ve node do (chinh la T)
-    // T se tra ve T o ham input (tuc la node goc chinh cua cay) khi o de quy lan cuoi
-    // T se tra ve T->pLeft hoac T->pRight o ham addNode() khi chua phai la lan de quy cuoi (tuc la no se tra ve node goc cua cay con)
     return T;
 }
 void input(NODE *&T)
 {
-    int x;
-    cout << "HAY NHAP 1 SO NGUYEN: ";
-    cin >> x;
-    NODE *newNode = constructNode(x);
-    T = addNode(T, newNode);
+    char choose = 'Y';
+    NODE *newNode;
+    do
+    {
+        newNode = constructNode();
+        T = addNode(T, newNode);
+        cout<<"BAN CO MUON NHA THEM SINH VIEN KHONG? (Y/N): ";
+        cin>>choose;
+        cin.ignore();
+    }while(choose=='y'|| choose=='Y');
 }
 void travelNLR(NODE *T)
 {
     if (T != NULL)
     {
-        cout << T->data << " ";
+        cout<<setw(15)<<left<<T->mssv;
+        cout<<setw(30)<<left<<T->name;
+        cout<<setw(20)<<left<<T->birth;
+        cout<<setw(10)<<left<<T->gpa<<endl;
         travelNLR(T->pLeft);
         travelNLR(T->pRight);
     }
@@ -195,14 +221,5 @@ void rotate_RL(NODE *&T)
     T2->pRight = T1;
     rotate_RR(T);
 }
-NODE *searchNode(NODE *T, int x)
-{
-    if (T == NULL)
-        return NULL;
-    else if (x>T->data)
-        return searchNode(T->pRight, x);
-    else if (x<T->data)
-        return searchNode(T->pLeft, x);
-    return T;
-}
+
 // copyrighted by 20H1120201_NguyenThanhDat
